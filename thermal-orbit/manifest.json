@@ -1,6 +1,6 @@
 {
-    "name": "Manga Manager",
-    "short_name": "MangaMgr",
+    "name": "Book Manager",
+    "short_name": "BookMgr",
     "start_url": "./index.html",
     "display": "standalone",
     "background_color": "#f5f5f5",

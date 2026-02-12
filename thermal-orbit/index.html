@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Manga Manager Prototype</title>
+
     <link rel="stylesheet" href="style.css">
     <!-- Material Icons -->
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
@@ -505,7 +505,7 @@
 
             const pTitle = document.getElementById('page-title');
             if (screenId === 'screen-home' && pTitle) {
-                pTitle.textContent = 'Manga Manager';
+                pTitle.textContent = 'Book Manager';
             }
         }
 
@@ -802,7 +802,7 @@
 
         <!-- Header -->
         <header>
-            <h1 id="page-title">Manga Manager</h1>
+            <h1 id="page-title">コミック管理</h1>
             <button id="btn-settings" class="icon-btn" style="margin-left: auto; margin-right: 8px;"
                 onclick="openSettings()">
                 <span class="material-icons">settings</span>
@@ -912,7 +912,7 @@
         <!-- Modal: Settings -->
         <div id="modal-settings" class="modal hidden">
             <div class="modal-content">
-                <h3>設定 <span style="font-size:12px; color:red;">v45</span></h3>
+                <h3>設定 <span style="font-size:12px; color:red;">v1</span></h3>
 
                 <div class="input-group">
                     <label class="input-label">購入済みデータの自動削除</label>
