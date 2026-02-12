@@ -998,89 +998,30 @@
             overlay.style.display = show ? 'flex' : 'none';
         }
 
-        // --- Parse OCR text into items (Keyword Based) ---
+        // --- Parse OCR text into items (Multi-Line Mode) ---
         function parseOcrText(rawText) {
             ensureState();
-            const lines = rawText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+            // Split by newline and filter empty/short noise
+            const lines = rawText.split('\n')
+                .map(l => l.trim())
+                .filter(l => l.length > 1); // Ignore single chars like "y" or "."
 
-            // Keyword detection
-            let title = '';
-            let volume = '';
-            let publisherName = '';
+            if (lines.length === 0) return [];
 
-            lines.forEach(line => {
-                // Title Parsing (Look for 'タイトル')
-                if (line.includes('タイトル')) {
-                    // Extract text next to 'タイトル' (remove the keyword)
-                    let extracted = line.replace('タイトル', '').trim();
-                    // Basic cleanup (remove colons, brackets if common)
-                    extracted = extracted.replace(/^[:：\s]+/, '').trim();
-                    if (extracted) title = extracted;
-                }
+            // Map each line to a potential item
+            return lines.map(line => {
+                // Determine potential title (just the line itself)
+                const title = line;
 
-                // Volume Parsing (Look for '巻数')
-                if (line.includes('巻数')) {
-                    // Extract text next to '巻数'
-                    let extracted = line.replace('巻数', '').trim();
-                    // Look for numbers in the extracted text
-                    const volMatch = extracted.match(/\d+/);
-                    if (volMatch) volume = volMatch[0];
-                }
-
-                // Publisher Parsing (Look for '出版社')
-                if (line.includes('出版社')) {
-                    // Extract text next to '出版社'
-                    let extracted = line.replace('出版社', '').trim();
-                    extracted = extracted.replace(/^[:：\s]+/, '').trim();
-                    if (extracted) publisherName = extracted;
-                }
+                return {
+                    id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
+                    rawText: rawText,
+                    title: title,
+                    volume: '', // Manual entry required
+                    publisher: '', // Manual entry required
+                    suggestions: generateSuggestions(title)
+                };
             });
-
-            // Fallback: If no keyword found, use first line as title? 
-            // The requirement says "If not written, leave empty or default (except title)".
-            // So if title keyword is missing, we might fail to parse or maybe fallback to first line?
-            // "タイトルという文字の隣...がタイトル名です" implies strict parsing. 
-            // But let's be safe: if title is empty, maybe use the first line that ISN'T a keyword line?
-            // For now, let's stick to the strict requirement. If title is empty, the item might be invalid.
-            // However, the user said "Publishers... empty or default (except title)". 
-            // Let's assume title MUST be there. If not found via keyword, let's fallback to the very first line 
-            // assuming it might be the title if keywords failed? 
-            // Re-reading: "タイトルという文字の...隣...がタイトル名です"
-            // I will implement strict parsing for now, but if title is empty, I'll use the raw text's first line as a fallback to avoid "empty" titles which are annoying.
-
-            if (!title && lines.length > 0) {
-                // heuristic: first line is often title if valid text exists
-                // But let's strictly follow "written next to title". 
-                // If not found, it's empty. But the UI requires a title.
-                // Let's fallback to "不明なタイトル" or similar if completely missing, or just skip?
-                // Let's try to be helpful: if we found NO specific keywords at all, maybe it's just a raw title?
-                // No, requested specific logic. I will leave title empty if not found, 
-                // but the UI might block saving. That's fine, user can edit.
-            }
-
-            // Map publisher name to ID
-            let publisherId = 'shueisha'; // Default
-            if (publisherName) {
-                // Try to find matching publisher
-                const match = window.state.publishers.find(p => p.name.includes(publisherName) || publisherName.includes(p.name));
-                if (match) publisherId = match.id;
-            }
-
-            // Fallback: If no title found via keyword, use the first line
-            if (!title && lines.length > 0) {
-                title = lines[0];
-            }
-
-            if (!title) return []; // Truly no text found
-
-            return [{
-                id: Date.now().toString(),
-                rawText: rawText,
-                title: title,
-                volume: volume, // Can be empty string
-                publisher: publisherId,
-                suggestions: generateSuggestions(title)
-            }];
         }
 
         // --- AI Suggestion Generation ---
@@ -1499,7 +1440,7 @@
         <!-- Modal: Settings -->
         <div id="modal-settings" class="modal hidden">
             <div class="modal-content">
-                <h3>設定 <span style="font-size:12px; color:red;">v40</span></h3>
+                <h3>設定 <span style="font-size:12px; color:red;">v41</span></h3>
 
                 <div class="input-group">
                     <label class="input-label">購入済みデータの自動削除</label>
