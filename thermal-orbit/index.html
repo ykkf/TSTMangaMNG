@@ -870,7 +870,12 @@
 
                 if (items.length === 0) {
                     showOcrLoading(false);
-                    showToast('テキストを読み取れませんでした');
+                    if (rawText && rawText.trim().length > 0) {
+                        // This implies fallback failed even with text? Should be rare with current logic.
+                        showToast('解析できませんでした (文字数: ' + rawText.length + ')');
+                    } else {
+                        showToast('文字が見つかりませんでした。明るい場所で撮影してください。');
+                    }
                     return;
                 }
 
