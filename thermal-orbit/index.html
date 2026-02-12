@@ -845,6 +845,85 @@
             input.value = '';
         }
 
+        // --- Image Pre-processing for OCR ---
+        function processImageForOCR(imageSource) {
+            return new Promise((resolve) => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+
+                    // Resize to manageable size (max 1500px width/height)
+                    const maxDim = 1500;
+                    let width = img.width;
+                    let height = img.height;
+
+                    if (width > height) {
+                        if (width > maxDim) {
+                            height = Math.round(height * (maxDim / width));
+                            width = maxDim;
+                        }
+                    } else {
+                        if (height > maxDim) {
+                            width = Math.round(width * (maxDim / height));
+                            height = maxDim;
+                        }
+                    }
+
+                    canvas.width = width;
+                    canvas.height = height;
+
+                    // Draw image
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    // Get raw pixel data
+                    const imageData = ctx.getImageData(0, 0, width, height);
+                    const data = imageData.data;
+
+                    // Convert to Grayscale & Binarize (Simple Threshold)
+                    // Threshold value: 128 is standard, maybe adaptive is better but complex.
+                    // Let's try high contrast grayscale first.
+                    for (let i = 0; i < data.length; i += 4) {
+                        const r = data[i];
+                        const g = data[i + 1];
+                        const b = data[i + 2];
+
+                        // Grayscale (Luminance)
+                        const gray = 0.299 * r + 0.587 * g + 0.114 * b;
+
+                        // Binarization (Threshold 100 - stricter for text on white?)
+                        // Or just Contrast enhancement:
+                        // val = (val - 128) * contrast + 128
+
+                        // Simple Thresholding for text extraction
+                        // If darker than 140 -> 0 (Black), else -> 255 (White)
+                        // This helps clean up noise but might lose faint text.
+                        // Let's use a "soft" binarization or just high contrast grayscale.
+                        // Actually Tesseract handles grayscale well. Let's just do Grayscale + Contrast.
+
+                        let val = gray;
+                        // Increase contrast
+                        const contrast = 1.5; // 50% more contrast
+                        val = ((val - 128) * contrast) + 128;
+
+                        // Clamp
+                        if (val < 0) val = 0;
+                        if (val > 255) val = 255;
+
+                        data[i] = val;     // R
+                        data[i + 1] = val; // G
+                        data[i + 2] = val; // B
+                        // Alpha remains 255
+                    }
+
+                    ctx.putImageData(imageData, 0, 0);
+                    resolve(canvas.toDataURL('image/png'));
+                };
+                img.onerror = () => resolve(imageSource); // Fallback to original
+                img.src = imageSource;
+            });
+        }
+
         // --- OCR Processing with Tesseract.js ---
         async function processOCR(imageSource) {
             // Show loading overlay
@@ -852,7 +931,13 @@
             navigateToScreen('screen-home');
 
             try {
-                const result = await Tesseract.recognize(imageSource, 'jpn+eng', {
+                // Pre-process image for better OCR
+                const processedImage = await processImageForOCR(imageSource);
+
+                // Use PSM 11 (Sparse Text) for covers, 6 (Single Block) also good. 
+                // 11 is 'Sparse text. Find as much text as possible in no particular order.'
+                const result = await Tesseract.recognize(processedImage, 'jpn+eng', {
+                    tessedit_pageseg_mode: Tesseract.PSM.SPARSE_TEXT,
                     logger: m => {
                         if (m.status === 'recognizing text') {
                             const pct = Math.round((m.progress || 0) * 100);
@@ -1414,7 +1499,7 @@
         <!-- Modal: Settings -->
         <div id="modal-settings" class="modal hidden">
             <div class="modal-content">
-                <h3>設定 <span style="font-size:12px; color:red;">v39</span></h3>
+                <h3>設定 <span style="font-size:12px; color:red;">v40</span></h3>
 
                 <div class="input-group">
                     <label class="input-label">購入済みデータの自動削除</label>
