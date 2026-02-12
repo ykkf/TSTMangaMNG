@@ -768,6 +768,16 @@
 
         // Attach ALL to window
         window.deleteDetailItem = deleteDetailItem;
+        window.openSettings = openSettings;
+        window.closeSettings = closeSettings;
+        window.saveSettings = saveSettings;
+        window.forceRenderPublishers = forceRenderPublishers;
+        window.forceRenderAuthors = forceRenderAuthors;
+        window.deletePublisher = deletePublisher;
+        window.deleteAllPurchased = deleteAllPurchased;
+        window.hardResetApp = hardResetApp;
+        window.openPublisherModal = openPublisherModal;
+
 
         // FORCE UNREGISTER SERVICE WORKER to fix caching issues
         if ('serviceWorker' in navigator) {
