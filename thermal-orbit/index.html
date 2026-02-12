@@ -931,13 +931,12 @@
             navigateToScreen('screen-home');
 
             try {
-                // Pre-process image for better OCR
-                const processedImage = await processImageForOCR(imageSource);
+                // Reverted pre-processing as it worsened results for colored covers (v42)
+                // const processedImage = await processImageForOCR(imageSource);
 
-                // Use PSM 11 (Sparse Text) for covers, 6 (Single Block) also good. 
-                // 11 is 'Sparse text. Find as much text as possible in no particular order.'
-                const result = await Tesseract.recognize(processedImage, 'jpn+eng', {
-                    tessedit_pageseg_mode: Tesseract.PSM.SPARSE_TEXT,
+                // Reverted PSM to default (AUTO) as SPARSE_TEXT (11) might be skipping title
+                const result = await Tesseract.recognize(imageSource, 'jpn+eng', {
+                    // tessedit_pageseg_mode: Tesseract.PSM.SPARSE_TEXT, 
                     logger: m => {
                         if (m.status === 'recognizing text') {
                             const pct = Math.round((m.progress || 0) * 100);
@@ -1440,7 +1439,7 @@
         <!-- Modal: Settings -->
         <div id="modal-settings" class="modal hidden">
             <div class="modal-content">
-                <h3>設定 <span style="font-size:12px; color:red;">v41</span></h3>
+                <h3>設定 <span style="font-size:12px; color:red;">v42</span></h3>
 
                 <div class="input-group">
                     <label class="input-label">購入済みデータの自動削除</label>
